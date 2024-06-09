@@ -1,6 +1,7 @@
 #atricle.py 
 from database.connection import get_db_connection
 class Article:
+    all = {}
     def __init__(self, id, title, content, author_id, magazine_id):
         self.id = id
         self.title = title
@@ -63,3 +64,31 @@ class Article:
             return Magazine(*magazine_data)
         else:
             return None
+        
+    @classmethod
+    def instance_from_db(cls, row):
+            article = cls.all.get(row[0])
+            if article:
+                article.title = row[1]
+                article.content = row[2]
+                article.author_id = row[3]
+                article.magazine_id = row[4]
+            else:
+                article = cls(row[0], row[1], row[2], row[3], row[4])
+                cls.all[article.id] = article
+            return article
+    
+    @classmethod
+    def list_all_articles(cls):
+        conn = get_db_connection()
+        CURSOR = conn.cursor()
+        sql = """
+            SELECT *
+            FROM articles
+        """
+        CURSOR.execute(sql)
+        article_data = CURSOR.fetchall()
+        articles = []
+        for row in article_data:
+            articles.append(cls.instance_from_db(row))
+        return articles

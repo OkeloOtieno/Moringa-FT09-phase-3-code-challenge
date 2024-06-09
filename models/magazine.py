@@ -53,6 +53,8 @@ class Magazine:
         self.id = CURSOR.lastrowid
         type(self).all[self.id] = self
 
+    
+
     @classmethod
     #creates a new entry in the database
     def create(cls, name, category):
@@ -158,3 +160,33 @@ class Magazine:
             authors.append(Author(*row)) 
 
         return authors
+    
+    @classmethod
+    def instance_from_db(cls, row):
+        """Return a Magazine object having the attribute values from the table row."""
+        magazine = cls.all.get(row[0])
+        if magazine:
+            magazine.name = row[1]
+            magazine.category = row[2]
+        else:
+            magazine = cls(row[1], row[2])
+            magazine.id = row[0]
+            cls.all[magazine.id] = magazine
+        return magazine
+    
+    @classmethod
+    def list_all_magazines(cls):
+        conn = get_db_connection()
+        CURSOR = conn.cursor()
+        sql = """
+            SELECT *
+            FROM magazines
+        """
+
+        CURSOR.execute(sql)
+        magazine_data = CURSOR.fetchall()
+
+        magazines = []
+        for row in magazine_data:
+            magazines.append(cls.instance_from_db(row))
+        return magazines

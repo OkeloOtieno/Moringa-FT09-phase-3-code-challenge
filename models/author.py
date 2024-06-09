@@ -4,7 +4,7 @@ class Author:
     all = {}
     def __init__(self, id, name):
         self.id = id
-        self.name = name
+        self._name = name
 
     def __repr__(self):
         return f'<Author {self.id} {self.name}>'
@@ -98,3 +98,37 @@ class Author:
         for row in magazine_data:
             magazines.append(Magazine(*row))
         return magazines
+    
+
+    @classmethod
+    def instance_from_db(cls, row):
+        """Return an Author object having the attribute values from the table row."""
+
+        # Check the dictionary for an existing instance using the row's primary key
+        author = cls.all.get(row[0])
+        if author:
+            # ensure attribute matches row value in case local instance was modified
+            author.name = row[1]
+        else:
+            # not in dictionary, create new instance and add to dictionary
+            author = cls(None, row[1])
+            author.id = row[0]
+            cls.all[author.id] = author
+        return author
+    
+    @classmethod
+    def list_all_authors(cls):
+        conn = get_db_connection()
+        CURSOR = conn.cursor()
+        sql = """
+            SELECT *
+            FROM authors
+        """
+
+        CURSOR.execute(sql)
+        author_data = CURSOR.fetchall()
+
+        authors = []
+        for row in author_data:
+            authors.append(cls.instance_from_db(row))
+        return authors
