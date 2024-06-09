@@ -131,35 +131,23 @@ class Magazine:
         titles = [row[0] for row in article_data]
         return titles
 
+    @property
     def contributing_authors(self):
-        from models.author import Author
+        from models.author import Author  # Local import to avoid circular dependency
         conn = get_db_connection()
         CURSOR = conn.cursor()
-        """
-        Retrieves and returns a list of Author objects who wrote more than 2 articles for this magazine.
-        Returns None if the magazine has no authors with more than 2 publications.
-        """
-        sql = """
-            SELECT DISTINCT a.*
-            FROM authors a
-            INNER JOIN articles ar ON ar.author = a.id
-            INNER JOIN magazines m on ar.magazine = m.id
-            WHERE m.id = ?
-            GROUP BY a.id
-            HAVING COUNT(ar.id) > 2
-        """
-
+        sql = '''
+            SELECT authors.id, authors.name
+            FROM authors
+            JOIN articles ON authors.id = articles.author_id
+            WHERE articles.magazine_id = ?
+            GROUP BY authors.id, authors.name
+            HAVING COUNT(articles.id) > 2
+        '''
         CURSOR.execute(sql, (self.id,))
-        author_data = CURSOR.fetchall()
-
-        if not author_data:
-            return None
-
-        authors = []
-        for row in author_data:
-            authors.append(Author(*row)) 
-
-        return authors
+        contributing_authors_data = CURSOR.fetchall()
+        conn.close()
+        return [Author(author['id'], author['name']) for author in contributing_authors_data]
     
     @classmethod
     def instance_from_db(cls, row):

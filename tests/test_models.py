@@ -28,5 +28,11 @@ class TestModels(unittest.TestCase):
         all_article = Article.list_all_articles()
         self.assertGreaterEqual(len(all_article),1)
 
+    def test_magazine_contributing_authors(self):
+        magazine = Magazine(1, "Vogue", "Fashion")
+        authors = magazine.contributing_authors
+        self.assertIsInstance(authors, list)
+        self.assertTrue(all(isinstance(author, Author) for author in authors))
+
 if __name__ == "__main__":
     unittest.main()

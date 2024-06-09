@@ -42,6 +42,8 @@ def main():
     # Query the database for inserted records. 
     # The following fetch functionality should probably be in their respective models
 
+    
+
     cursor.execute('SELECT * FROM magazines')
     magazines = cursor.fetchall()
 
